@@ -79,6 +79,7 @@ class Canvas extends JComponent {
         brush.drawString("Jumping: " + currentlyJumping, 10, 50);
         brush.drawString("Y-Coordinate: " + userYC, 10, 65);
         brush.drawString("X-Coordinate: " + userXC, 10, 80);
+        brush.drawString("Intruding: " + intruding, 10, 95);
 
         // set brush color
         brush.setColor(Color.BLACK);
@@ -91,7 +92,7 @@ class Canvas extends JComponent {
         actVelocity();
         noContact();
         isGravityOn(brush);
-        gravity();
+        //gravity();
 
         // draw the user
         brush.drawRect(userXC, userYC, userWidth, userHeight);
@@ -106,15 +107,35 @@ class Canvas extends JComponent {
             switch (Mover.keyList.get(i)) {
                 case KeyEvent.VK_W:
                     userYC -= 2;
+                    checkIntruding();
+                    if (intruding) {
+                        userYC += 2;
+                    }
+                    intruding = false;
                     break;
                 case KeyEvent.VK_A:
                     userXC -= 2;
+                    checkIntruding();
+                    if (intruding) {
+                        userXC += 2;
+                    }
+                    intruding = false;
                     break;
                 case KeyEvent.VK_S:
                     userYC += 2;
+                    checkIntruding();
+                    if (intruding) {
+                        userYC -= 2;
+                    }
+                    intruding = false;
                     break;
                 case KeyEvent.VK_D:
                     userXC += 2;
+                    checkIntruding();
+                    if (intruding) {
+                        userXC -= 2;
+                    }
+                    intruding = false;
                     break;
                 case KeyEvent.VK_SPACE:
                     jump();
@@ -124,7 +145,18 @@ class Canvas extends JComponent {
         jumping();
     }
 
-    public static boolean intruding;
+    public static boolean intruding = false;
+
+    public void checkIntruding() {
+        // if the user is on top of any object, gravity is also off
+        for (int i = 0; i < squareList.size(); i++) {
+
+            if ((userYC > (squareList.get(i).y - 50) && userYC < (squareList.get(i).y + 50) && userXC > (squareList.get(i).x - 50) && userXC < (squareList.get(i).x + 50))) {
+                intruding = true;
+            }
+        }
+    }
+
     public void isGravityOn(Graphics2D brush) { // TODO brush is only for debugging, remove when done
         intruding = false;
         // if the user hit the ground, gravity is OFF
@@ -134,30 +166,12 @@ class Canvas extends JComponent {
         } else if ((userYC < (groundYA - 50)) || (userYC < (groundYB - 50))) { // if the user is not yet at the ground...
             gravityOn = true;
         }
-        // if the user is on top of any object, gravity is also off
-        for (int i = 0; i < squareList.size(); i++) {
-
-            double fromLeft = (userYC - (squareList.get(i).y - 50));
-            double fromRight = (squareList.get(i).y + 50) - userYC;
-            brush.drawString("Difference left: " + fromLeft, 10, 95);
-            brush.drawString("Difference right: " + fromRight, 10, 110);
-
-            // if we are intruding into the box
-            if ((userYC > (squareList.get(i).y - 50) && userYC < (squareList.get(i).y + 50) && userXC > (squareList.get(i).x - 50) && userXC < (squareList.get(i).x + 50))) {
-                brush.drawString("INTRUDING", 10, 125);
-                /*
-                if (userYC >= (squareList.get(i).y - 50)) {
-                    userYC = squareList.get(i).y - 50;
-                }
-                */
-            }
-        }
     }
 
     public void gravity() {
         // if user hit the ground
         if (gravityOn == true) {
-           // YVelocity += accelerationDueToGravity;
+           YVelocity += accelerationDueToGravity;
         }
         if (gravityOn == false) {
             YVelocity = 0;
@@ -167,6 +181,11 @@ class Canvas extends JComponent {
 
     public void actVelocity() {
         userYC += (int) YVelocity;
+        checkIntruding();
+        if (intruding) {
+            userYC -= (int) YVelocity;
+        }
+        intruding = false;
     }
 
     // don't allow the user to cross the ground line
