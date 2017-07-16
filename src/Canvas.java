@@ -72,9 +72,12 @@ class Canvas extends JComponent {
 
         // list of validation methods
 
-        gravity();
+        // if the box is below the ground line, set it to the ground line
         actVelocity();
         noContact();
+        gravity();
+
+
 
         // draw the user
         brush.setColor(Color.BLACK);
@@ -84,7 +87,7 @@ class Canvas extends JComponent {
         for (int i = 0 ; i < Mover.keyList.size(); i++) {
             switch (Mover.keyList.get(i)) {
                 case KeyEvent.VK_W:
-                    userYC -= 2;
+                    userYC -= 8;
                     break;
                 case KeyEvent.VK_A:
                     userXC -= 2;
@@ -103,6 +106,18 @@ class Canvas extends JComponent {
         jumping();
     }
 
+    public void jump() {
+        if (currentlyJumping == false) {
+            currentlyJumping = true;
+        }
+    }
+
+    public void jumping() {
+        if (currentlyJumping == true) {
+            userYC -= 4;
+        }
+    }
+
     public void gravity() {
         // if user hit the ground
         if ((userYC >= (groundYA - 50)) || (userYC >= (groundYB - 50))) {
@@ -117,21 +132,9 @@ class Canvas extends JComponent {
         userYC += (int) YVelocity;
     }
 
-    public void jump() {
-        if (currentlyJumping == false) {
-            currentlyJumping = true;
-        }
-    }
-
-    public void jumping() {
-        if (currentlyJumping == true) {
-            userYC -= 4;
-        }
-    }
-
     // don't allow the user to cross the ground line
     public void noContact() {
-        if ((userYC > (groundYA - 50)) || (userYC > (groundYB - 50))) {
+        if ((userYC >= (groundYA - 50)) || (userYC >= (groundYB - 50))) {
             userYC = (groundYA - 50);
             currentlyJumping = false;
         }
