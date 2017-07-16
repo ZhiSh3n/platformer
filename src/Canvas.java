@@ -3,6 +3,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import javax.swing.JComponent;
+import java.awt.RenderingHints;
 import java.util.*;
 
 /**
@@ -24,6 +25,7 @@ class Canvas extends JComponent {
 
     // initialize gravity information
     public static double accelerationDueToGravity = 0.1;
+    public static boolean gravityOn = true;
 
     // initialize delta timing information
     public static double beatPeriod = 9;
@@ -36,7 +38,14 @@ class Canvas extends JComponent {
     // jumping
     public static boolean currentlyJumping = false;
 
+    // arraylist of squares
+    ArrayList<Square> squareList = new ArrayList<Square>();
+
     public Canvas() {
+        // generate obstacles
+        squareList.add(new Square(400, 370, 50, 50));
+
+        // start animation thread
         Thread animationThread = new Thread(new Runnable() {
             public void run() {
                 while (true) {
@@ -46,15 +55,6 @@ class Canvas extends JComponent {
                         lastTime = now;
                         repaint();
                     }
-
-                    /*
-                    try {
-                        Thread.sleep(10);
-                    } catch (Exception e) {
-                        // null
-                    }
-                    */
-
                 }
             }
         });
@@ -64,6 +64,20 @@ class Canvas extends JComponent {
     public void paintComponent(Graphics g) {
         Graphics2D brush = (Graphics2D) g;
 
+        // rendering hints
+        RenderingHints rh = new RenderingHints(
+                RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_GASP
+        );
+        brush.setRenderingHints(rh);
+
+        // draw the text
+        brush.drawString("Y-Velocity: " + YVelocity, 10, 20);
+        brush.drawString("Squares: " + squareList.size(), 10, 35);
+        brush.drawString("Jumping: " + currentlyJumping, 10, 50);
+        brush.drawString("Y-Coordinate: " + userYC, 10, 65);
+        brush.drawString("X-Coordinate: " + userXC, 10, 80);
+
         // set brush color
         brush.setColor(Color.BLACK);
 
@@ -71,23 +85,25 @@ class Canvas extends JComponent {
         brush.drawLine(groundXA, groundYA, groundXB, groundYB);
 
         // list of validation methods
-
         // if the box is below the ground line, set it to the ground line
         actVelocity();
         noContact();
+        isGravityOn(brush);
         gravity();
 
-
-
         // draw the user
-        brush.setColor(Color.BLACK);
         brush.drawRect(userXC, userYC, userWidth, userHeight);
+
+
+        for (int i = 0; i < squareList.size(); i++) {
+            squareList.get(i).draw(brush);
+        }
 
         // movement
         for (int i = 0 ; i < Mover.keyList.size(); i++) {
             switch (Mover.keyList.get(i)) {
                 case KeyEvent.VK_W:
-                    userYC -= 8;
+                    userYC -= 2;
                     break;
                 case KeyEvent.VK_A:
                     userXC -= 2;
@@ -106,25 +122,71 @@ class Canvas extends JComponent {
         jumping();
     }
 
-    public void jump() {
-        if (currentlyJumping == false) {
-            currentlyJumping = true;
-        }
-    }
+    /*
+    // if i'm coming from the left
+            if (userXC >= (squareList.get(i).x - 50)) {
+                userXC = (squareList.get(i).x - 50);
+                currentlyJumping = false;
+            }
+            // if i'm coming from the right
+            if (userXC <= (squareList.get(i).x + 50)) {
+                userXC = (squareList.get(i).x + 50);
+                currentlyJumping = false;
+            }
+            // if i'm hitting from bottom
+            if (userYC <= (squareList.get(i).y + 50)) {
+                userYC = (squareList.get(i).y + 50);
+                currentlyJumping = false;
+            }
+     */
 
-    public void jumping() {
-        if (currentlyJumping == true) {
-            userYC -= 4;
+    public void isGravityOn(Graphics2D brush) { // TODO brush is only for debugging, remove when done
+
+        // if the user hit the ground, gravity is OFF
+        if ((userYC >= (groundYA - 50)) || (userYC >= (groundYB - 50))) {
+            gravityOn = false;
+            //currentlyJumping = false;
+        } else if ((userYC < (groundYA - 50)) || (userYC < (groundYB - 50))) { // if the user is not yet at the ground...
+            gravityOn = true;
         }
+
+        // if the user is on top of any object, gravity is also off
+        for (int i = 0; i < squareList.size(); i++) {
+
+            double fromLeft = (squareList.get(i).x - 50) - userXC;
+            double fromRight = userXC - (squareList.get(i).x + 50);
+            brush.drawString("Difference left: " + fromLeft, 10, 95);
+            brush.drawString("Difference right: " + fromRight, 10, 110);
+
+            if (userYC > (squareList.get(i).y - 50) && userYC < (squareList.get(i).y + 50) && userXC > (squareList.get(i).x - 50) && userXC < (squareList.get(i).x + 50)) {
+                if (((squareList.get(i).y - 50) - userYC) > userYC - (squareList.get(i).y + 50)) {
+                    userYC = (squareList.get(i).y - 50);
+                } else {
+                    userYC = (squareList.get(i).y + 50);
+                }
+
+            }  if (userXC > (squareList.get(i).x - 50) && userXC < (squareList.get(i).x + 50) && userYC > (squareList.get(i).y - 50) && userYC < (squareList.get(i).y + 50)) {
+                if (((squareList.get(i).x - 50) - userXC) > userXC - (squareList.get(i).x + 50)) {
+                    userXC = (squareList.get(i).x - 50);
+                } else {
+                    userXC = (squareList.get(i).x + 50);
+                }
+
+            }
+
+        }
+
+
     }
 
     public void gravity() {
         // if user hit the ground
-        if ((userYC >= (groundYA - 50)) || (userYC >= (groundYB - 50))) {
+        if (gravityOn == true) {
+           // YVelocity += accelerationDueToGravity;
+        }
+        if (gravityOn == false) {
             YVelocity = 0;
             currentlyJumping = false;
-        } else if ((userYC < (groundYA - 50)) || (userYC < (groundYB - 50))) { // if the user is not yet at the ground...
-            YVelocity += accelerationDueToGravity;
         }
     }
 
@@ -140,4 +202,15 @@ class Canvas extends JComponent {
         }
     }
 
+    public void jump() {
+        if (currentlyJumping == false) {
+            currentlyJumping = true;
+        }
+    }
+
+    public void jumping() {
+        if (currentlyJumping == true) {
+            userYC -= 5;
+        }
+    }
 }
