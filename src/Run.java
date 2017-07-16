@@ -16,6 +16,8 @@ public class Run extends JPanel {
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
 
+
+
         // add animation thread
         frame.add(new Canvas());
         frame.setVisible(true);
