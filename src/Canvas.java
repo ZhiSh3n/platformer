@@ -80,6 +80,7 @@ class Canvas extends JComponent {
         brush.drawString("Y-Coordinate: " + userYC, 10, 65);
         brush.drawString("X-Coordinate: " + userXC, 10, 80);
         brush.drawString("Intruding: " + intruding, 10, 95);
+        brush.drawString("Square X, Y : " + squareList.get(0).x + ", " + squareList.get(0).y, 10, 110);
 
         // set brush color
         brush.setColor(Color.BLACK);
@@ -91,8 +92,9 @@ class Canvas extends JComponent {
         // if the box is below the ground line, set it to the ground line
         actVelocity();
         noContact();
+        gravity();
+
         isGravityOn(brush);
-        //gravity();
 
         // draw the user
         brush.drawRect(userXC, userYC, userWidth, userHeight);
@@ -146,19 +148,23 @@ class Canvas extends JComponent {
     }
 
     public static boolean intruding = false;
+    public static Square intruder;
 
     public void checkIntruding() {
+        // TODO so now the problem is that we need to fix gravity when we jump onto the obstacle
         // if the user is on top of any object, gravity is also off
         for (int i = 0; i < squareList.size(); i++) {
 
             if ((userYC > (squareList.get(i).y - 50) && userYC < (squareList.get(i).y + 50) && userXC > (squareList.get(i).x - 50) && userXC < (squareList.get(i).x + 50))) {
                 intruding = true;
+                intruder = squareList.get(i);
             }
         }
     }
 
+
+
     public void isGravityOn(Graphics2D brush) { // TODO brush is only for debugging, remove when done
-        intruding = false;
         // if the user hit the ground, gravity is OFF
         if ((userYC >= (groundYA - 50)) || (userYC >= (groundYB - 50))) {
             gravityOn = false;
@@ -167,6 +173,7 @@ class Canvas extends JComponent {
             gravityOn = true;
         }
     }
+
 
     public void gravity() {
         // if user hit the ground
@@ -183,7 +190,9 @@ class Canvas extends JComponent {
         userYC += (int) YVelocity;
         checkIntruding();
         if (intruding) {
-            userYC -= (int) YVelocity;
+            userYC -= YVelocity;
+            userYC = intruder.y - 50;
+            gravityOn = false;
         }
         intruding = false;
     }
