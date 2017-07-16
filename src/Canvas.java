@@ -23,7 +23,7 @@ class Canvas extends JComponent {
     public static int groundYB = 500;
 
     // initialize gravity information
-    public static double accelerationDueToGravity = 0.05;
+    public static double accelerationDueToGravity = 0.1;
 
     // initialize delta timing information
     public static double beatPeriod = 9;
@@ -32,6 +32,9 @@ class Canvas extends JComponent {
     // velocity arrays
     public static double YVelocity = 0;
     public static double XVelocity = 0;
+
+    // jumping
+    public static boolean currentlyJumping = false;
 
     public Canvas() {
         Thread animationThread = new Thread(new Runnable() {
@@ -81,7 +84,7 @@ class Canvas extends JComponent {
         for (int i = 0 ; i < Mover.keyList.size(); i++) {
             switch (Mover.keyList.get(i)) {
                 case KeyEvent.VK_W:
-                    jump();
+                    userYC -= 2;
                     break;
                 case KeyEvent.VK_A:
                     userXC -= 2;
@@ -97,16 +100,16 @@ class Canvas extends JComponent {
                     break;
             }
         }
+        jumping();
     }
 
     public void gravity() {
-        // if the user is not yet at the ground...
-        if ((userYC < (groundYA - 50)) || (userYC < (groundYB - 50))) {
-            YVelocity += accelerationDueToGravity;
-        }
         // if user hit the ground
         if ((userYC >= (groundYA - 50)) || (userYC >= (groundYB - 50))) {
             YVelocity = 0;
+            currentlyJumping = false;
+        } else if ((userYC < (groundYA - 50)) || (userYC < (groundYB - 50))) { // if the user is not yet at the ground...
+            YVelocity += accelerationDueToGravity;
         }
     }
 
@@ -114,15 +117,15 @@ class Canvas extends JComponent {
         userYC += (int) YVelocity;
     }
 
-    public static boolean currentlyJumping = false;
-
     public void jump() {
         if (currentlyJumping == false) {
-            userYC = userYC - 100;
             currentlyJumping = true;
         }
-        if ((userYC >= (groundYA - 50)) || (userYC >= (groundYB - 50))) {
-           currentlyJumping = false;
+    }
+
+    public void jumping() {
+        if (currentlyJumping == true) {
+            userYC -= 4;
         }
     }
 
@@ -130,6 +133,7 @@ class Canvas extends JComponent {
     public void noContact() {
         if ((userYC > (groundYA - 50)) || (userYC > (groundYB - 50))) {
             userYC = (groundYA - 50);
+            currentlyJumping = false;
         }
     }
 
