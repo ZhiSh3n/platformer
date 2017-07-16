@@ -5,6 +5,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.JComponent;
 import java.awt.RenderingHints;
 import java.util.*;
+import java.awt.geom.Area;
 
 /**
  * Created by zhi on 7/16/17.
@@ -37,6 +38,7 @@ class Canvas extends JComponent {
 
     // jumping
     public static boolean currentlyJumping = false;
+
 
     // arraylist of squares
     ArrayList<Square> squareList = new ArrayList<Square>();
@@ -122,26 +124,9 @@ class Canvas extends JComponent {
         jumping();
     }
 
-    /*
-    // if i'm coming from the left
-            if (userXC >= (squareList.get(i).x - 50)) {
-                userXC = (squareList.get(i).x - 50);
-                currentlyJumping = false;
-            }
-            // if i'm coming from the right
-            if (userXC <= (squareList.get(i).x + 50)) {
-                userXC = (squareList.get(i).x + 50);
-                currentlyJumping = false;
-            }
-            // if i'm hitting from bottom
-            if (userYC <= (squareList.get(i).y + 50)) {
-                userYC = (squareList.get(i).y + 50);
-                currentlyJumping = false;
-            }
-     */
-
+    public static boolean intruding;
     public void isGravityOn(Graphics2D brush) { // TODO brush is only for debugging, remove when done
-
+        intruding = false;
         // if the user hit the ground, gravity is OFF
         if ((userYC >= (groundYA - 50)) || (userYC >= (groundYB - 50))) {
             gravityOn = false;
@@ -149,34 +134,24 @@ class Canvas extends JComponent {
         } else if ((userYC < (groundYA - 50)) || (userYC < (groundYB - 50))) { // if the user is not yet at the ground...
             gravityOn = true;
         }
-
         // if the user is on top of any object, gravity is also off
         for (int i = 0; i < squareList.size(); i++) {
 
-            double fromLeft = (squareList.get(i).x - 50) - userXC;
-            double fromRight = userXC - (squareList.get(i).x + 50);
+            double fromLeft = (userYC - (squareList.get(i).y - 50));
+            double fromRight = (squareList.get(i).y + 50) - userYC;
             brush.drawString("Difference left: " + fromLeft, 10, 95);
             brush.drawString("Difference right: " + fromRight, 10, 110);
 
-            if (userYC > (squareList.get(i).y - 50) && userYC < (squareList.get(i).y + 50) && userXC > (squareList.get(i).x - 50) && userXC < (squareList.get(i).x + 50)) {
-                if (((squareList.get(i).y - 50) - userYC) > userYC - (squareList.get(i).y + 50)) {
-                    userYC = (squareList.get(i).y - 50);
-                } else {
-                    userYC = (squareList.get(i).y + 50);
+            // if we are intruding into the box
+            if ((userYC > (squareList.get(i).y - 50) && userYC < (squareList.get(i).y + 50) && userXC > (squareList.get(i).x - 50) && userXC < (squareList.get(i).x + 50))) {
+                brush.drawString("INTRUDING", 10, 125);
+                /*
+                if (userYC >= (squareList.get(i).y - 50)) {
+                    userYC = squareList.get(i).y - 50;
                 }
-
-            }  if (userXC > (squareList.get(i).x - 50) && userXC < (squareList.get(i).x + 50) && userYC > (squareList.get(i).y - 50) && userYC < (squareList.get(i).y + 50)) {
-                if (((squareList.get(i).x - 50) - userXC) > userXC - (squareList.get(i).x + 50)) {
-                    userXC = (squareList.get(i).x - 50);
-                } else {
-                    userXC = (squareList.get(i).x + 50);
-                }
-
+                */
             }
-
         }
-
-
     }
 
     public void gravity() {
