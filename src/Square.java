@@ -5,20 +5,20 @@ import java.awt.*;
  */
 public class Square {
 
-    public static int x;
-    public static int y;
-    public static int w;
-    public static int h;
+    int xc;
+    int yc;
+    int wd;
+    int hd;
 
     public Square(int x, int y, int w, int h) {
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
+        this.xc = x;
+        this.yc = y;
+        this.wd = w;
+        this.hd = h;
     }
 
     public void draw(Graphics2D brush) {
-        brush.drawRect(x, y, w, h);
+        brush.drawRect(this.xc, this.yc, this.wd, this.hd);
     }
 
 }
