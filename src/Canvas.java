@@ -5,7 +5,9 @@ import java.awt.event.KeyEvent;
 import javax.swing.JComponent;
 import java.awt.RenderingHints;
 import java.util.*;
-import java.awt.geom.Area;
+
+
+// TODO now we need to fix when we are jumping from below underneat obstacle
 
 /**
  * Created by zhi on 7/16/17.
@@ -151,7 +153,6 @@ class Canvas extends JComponent {
     public static Square intruder;
 
     public void checkIntruding() {
-        // TODO so now the problem is that we need to fix gravity when we jump onto the obstacle
         // if the user is on top of any object, gravity is also off
         for (int i = 0; i < squareList.size(); i++) {
 
@@ -183,6 +184,7 @@ class Canvas extends JComponent {
         if (gravityOn == false) {
             YVelocity = 0;
             currentlyJumping = false;
+            jumpRate = 5;
         }
     }
 
@@ -211,9 +213,18 @@ class Canvas extends JComponent {
         }
     }
 
+    public static int jumpRate = 5;
+
     public void jumping() {
         if (currentlyJumping == true) {
-            userYC -= 5;
+            userYC -= jumpRate;
+            checkIntruding();
+            if (intruding) {
+                userYC += jumpRate;
+                jumpRate = 0;
+                //currentlyJumping = false;
+            }
+            intruding = false;
         }
     }
 }
