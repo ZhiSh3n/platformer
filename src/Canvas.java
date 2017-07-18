@@ -174,7 +174,6 @@ class Canvas extends JComponent {
         // jumprate will be turned back on once it hits the ground
         jumping();
     }
-
     public void checkIntruding() {
         // if the user is on top of any object, gravity is also off
         for (int i = 0; i < squareList.size(); i++) {
@@ -184,7 +183,6 @@ class Canvas extends JComponent {
             }
         }
     }
-
     public void actVelocity() { // TODO
         userYC += (int) YVelocity; // add the gravity velocity
         checkIntruding(); // are we intruding?
@@ -202,7 +200,6 @@ class Canvas extends JComponent {
         }
         intruding = false;
     }
-
     public void gravity() {
         // if user hit the ground
         if (gravityOn == true) {
@@ -214,7 +211,6 @@ class Canvas extends JComponent {
             jumpRate = 5;
         }
     }
-
     public void isGravityOn(Graphics2D brush) { // TODO brush is only for debugging, remove when done
         // if the user hit the ground, gravity is OFF
         if (userYC >= (groundYA - 50)) {
@@ -225,12 +221,6 @@ class Canvas extends JComponent {
             gravityOn = true;
         }
     }
-
-
-
-
-
-
     public void jump() {
         if (currentlyJumping == false) {
             currentlyJumping = true;
