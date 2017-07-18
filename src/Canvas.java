@@ -14,14 +14,16 @@ import java.util.*;
 
 // TODO we need to only draw things if they are on the screen
 
+// TODO if we are not implementing top scrolling, then perhaps make a ceiling?
+
 /**
  * Created by zhi on 7/16/17.
  */
 class Canvas extends JComponent {
 
     // initialize user information
-    public static int userXC = 300;
-    public static int userYC = 200;
+    public static int userXC = 350;
+    public static int userYC = 180;
     public static int userWidth = 50;
     public static int userHeight = 50;
 
@@ -53,7 +55,13 @@ class Canvas extends JComponent {
 
     public static boolean amOnObstacle = false;
 
-    public static boolean scrollTrue = false;
+    public static boolean horizontalScrollTrue = false;
+    public static boolean verticalScrollTrue = false;
+
+
+    // debugging tools
+    public static int frameCounter = 0;
+    public static int[] YCBuffer = new int[2];
 
     // arraylist of squares
     ArrayList<Square> squareList = new ArrayList<Square>();
@@ -64,6 +72,9 @@ class Canvas extends JComponent {
         squareList.add(new Square(350, 230, 50, 50));
         squareList.add(new Square(150, 230, 100, 50));
         squareList.add(new Square(510, 230, 50, 100));
+        squareList.add(new Square(300, 150, 50, 100));
+        squareList.add(new Square(510, 70, 50, 50));
+
 
         // start animation thread
         Thread animationThread = new Thread(new Runnable() {
@@ -83,6 +94,12 @@ class Canvas extends JComponent {
 
     public void paintComponent(Graphics g) {
         Graphics2D brush = (Graphics2D) g;
+
+        frameCounter += 1;
+        YCBuffer[0] = YCBuffer[1];
+        YCBuffer[1] = userYC;
+        System.out.println(YCBuffer[1] - YCBuffer[0]);
+        //System.out.println(userYC);
 
         // rendering hints
         RenderingHints rh = new RenderingHints(
@@ -104,6 +121,7 @@ class Canvas extends JComponent {
         brush.drawString("Intruding: " + intruding, 10, 95);
         brush.drawString("On Obstacle? " + amOnObstacle, 10, 110);
         brush.drawString("Gravity? " + gravityOn, 10, 125);
+        brush.drawString("Frames: " + frameCounter, 10, 140);
 
         // set brush color
         brush.setColor(Color.BLACK);
@@ -122,9 +140,6 @@ class Canvas extends JComponent {
         // if gravity is off,  turn jumping off + turn on the jump rate + set user's YVelocity to 0
         gravity();
 
-        // check if on obstacle
-        //checkOnObstacle();
-
         // if the user is in the air, then set gravity to on
         // if user is on the ground, set gravity to off
         isGravityOn(brush);
@@ -133,8 +148,13 @@ class Canvas extends JComponent {
         brush.drawRect(userXC, userYC, userWidth, userHeight);
 
 
+        // the draw function for all the obstacles
+        // TODO make it so that obstacles are only drawn when they are in the frame
         for (int i = 0; i < squareList.size(); i++) {
-            squareList.get(i).draw(brush);
+            if ((squareList.get(i).xc < Run.frameWidth * 0.98) && (squareList.get(i).xc > (Run.frameWidth * 0.02))) {
+                squareList.get(i).draw(brush);
+            }
+
         }
 
         // movement
@@ -147,6 +167,14 @@ class Canvas extends JComponent {
                         userYC += 2;
                     }
                     intruding = false;
+                    checkScrollVertical();
+                    if (verticalScrollTrue) {
+                        userYC += 2;
+                        shiftVertical(-2);
+                        groundYA += 2;
+                        groundYB += 2;
+                    }
+                    verticalScrollTrue = false;
                     break;
                 case KeyEvent.VK_A:
                     userXC -= 2;
@@ -155,12 +183,12 @@ class Canvas extends JComponent {
                         userXC += 2;
                     }
                     intruding = false;
-                    checkScroll(brush);
-                    if (scrollTrue) {
+                    checkScrollHorizontal();
+                    if (horizontalScrollTrue) {
                         userXC += 2;
-                        shiftAll(-2);
+                        shiftHorizontal(-2);
                     }
-                    scrollTrue = false;
+                    horizontalScrollTrue = false;
                     break;
                 case KeyEvent.VK_S:
                     userYC += 2;
@@ -169,6 +197,14 @@ class Canvas extends JComponent {
                         userYC -= 2;
                     }
                     intruding = false;
+                    checkScrollVertical();
+                    if (verticalScrollTrue) {
+                        userYC -= 2;
+                        shiftVertical(+2);
+                        groundYA -= 2;
+                        groundYB -= 2;
+                    }
+                    verticalScrollTrue = false;
                     break;
                 case KeyEvent.VK_D:
                     userXC += 2;
@@ -177,12 +213,12 @@ class Canvas extends JComponent {
                         userXC -= 2;
                     }
                     intruding = false;
-                    checkScroll(brush);
-                    if (scrollTrue) {
+                    checkScrollHorizontal();
+                    if (horizontalScrollTrue) {
                         userXC -= 2;
-                        shiftAll(+2);
+                        shiftHorizontal(+2);
                     }
-                    scrollTrue = false;
+                    horizontalScrollTrue = false;
                     break;
                 case KeyEvent.VK_SPACE:
                     jump();
@@ -194,19 +230,34 @@ class Canvas extends JComponent {
         jumping();
     }
 
-    public void checkScroll(Graphics2D brush) {
+    public void checkScrollHorizontal() {
         // the in-frame box
-        if (userXC > (Run.frameWidth * 0.8)) {
-            scrollTrue = true;
+        if (userXC > (Run.frameWidth * 0.65)) {
+            horizontalScrollTrue = true;
         }
-        if (userXC < (Run.frameWidth * 0.2)) {
-            scrollTrue = true;
+        if (userXC < (Run.frameWidth * 0.35)) {
+            horizontalScrollTrue = true;
         }
     }
 
-    public void shiftAll(int shiftBy) {
+    public void checkScrollVertical() {
+        if (userYC > (Run.frameHeight * 0.8)) {
+            verticalScrollTrue = true;
+        }
+        if (userYC < (Run.frameHeight * 0.2)) {
+            verticalScrollTrue = true;
+        }
+    }
+
+    public void shiftHorizontal(int shiftBy) {
         for (int i = 0; i < squareList.size(); i++) {
             squareList.get(i).xc -= shiftBy;
+        }
+    }
+
+    public void shiftVertical(double shiftBy) {
+        for (int i = 0; i < squareList.size(); i++) {
+            squareList.get(i).yc -= shiftBy;
         }
     }
 
@@ -221,7 +272,7 @@ class Canvas extends JComponent {
         }
     }
     public void actVelocity() { //
-        userYC += (int) YVelocity; // add the gravity velocity
+        userYC += YVelocity; // add the gravity velocity
         checkIntruding(); // are we intruding?
         if (intruding == true) { // if we are...
             userYC -= YVelocity; // rescind the change in y coordinate
@@ -229,6 +280,16 @@ class Canvas extends JComponent {
             gravityOn = false; // gravity is OFF
             jumpRate = 5;
         }
+
+        checkScrollVertical();
+        if (verticalScrollTrue) {
+            userYC -= YVelocity;
+            shiftVertical(YVelocity);
+            groundYA -= YVelocity;
+            groundYB -= YVelocity;
+        }
+        verticalScrollTrue = false;
+
         amOnObstacle = false;
         for (int i = 0; i < squareList.size(); i++) {
             if ((userYC == (squareList.get(i).yc - 50)) && ((userXC > (squareList.get(i).xc - 50)) && (userXC < (squareList.get(i).xc + squareList.get(i).wd)))) { // if we are on the same Y and we are within an X range...
@@ -274,6 +335,15 @@ class Canvas extends JComponent {
                 //currentlyJumping = false; we don't do this because it allows us to jump infinitely after hitting the bottom of an obstacle
             }
             intruding = false;
+
+            checkScrollVertical();
+            if (verticalScrollTrue) {
+                userYC += jumpRate;
+                shiftVertical(-jumpRate);
+                groundYA += jumpRate;
+                groundYB += jumpRate;
+            }
+            verticalScrollTrue = false;
         }
     }
     // don't allow the user to cross the ground line
