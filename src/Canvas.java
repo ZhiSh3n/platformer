@@ -96,6 +96,7 @@ class Canvas extends JComponent {
         brush.drawString("X-Coordinate: " + userXC, 10, 80);
         brush.drawString("Intruding: " + intruding, 10, 95);
         brush.drawString("On Obstacle? " + amOnObstacle, 10, 110);
+        brush.drawString("Gravity? " + gravityOn, 10, 125);
 
         // set brush color
         brush.setColor(Color.BLACK);
@@ -177,38 +178,29 @@ class Canvas extends JComponent {
     public void checkIntruding() {
         // if the user is on top of any object, gravity is also off
         for (int i = 0; i < squareList.size(); i++) {
-            if ((userYC > (squareList.get(i).yc - 50) && userYC < (squareList.get(i).yc + squareList.get(i).hd) && userXC > (squareList.get(i).xc - 50) && userXC < (squareList.get(i).xc + squareList.get(i).wd))) {
+            if ((userYC > (squareList.get(i).yc - 50)) && (userYC < (squareList.get(i).yc + squareList.get(i).hd)) && (userXC > (squareList.get(i).xc - 50)) && (userXC < (squareList.get(i).xc + squareList.get(i).wd))) {
                 intruding = true;
                 intruder = squareList.get(i);
             }
         }
     }
 
-    public void actVelocity() {
-        userYC += (int) YVelocity;
-        checkIntruding();
-        if (intruding) {
-            userYC -= YVelocity;
-            userYC = intruder.yc - 50;
-            gravityOn = false;
+    public void actVelocity() { // TODO
+        userYC += (int) YVelocity; // add the gravity velocity
+        checkIntruding(); // are we intruding?
+        if (intruding == true) { // if we are...
+            userYC -= YVelocity; // rescind the change in y coordinate
+            userYC = intruder.yc - 50; // put the user on top of the obstacle
+            gravityOn = false; // gravity is OFF
             jumpRate = 5;
-
         }
         amOnObstacle = false;
         for (int i = 0; i < squareList.size(); i++) {
-            if ((userYC == (squareList.get(i).yc - 50) && (userXC < (squareList.get(i).xc - squareList.get(i).wd)) && (userXC > (squareList.get(i).xc + 50)))) { // if we are on the same Y and we are within an X range...
+            if ((userYC == (squareList.get(i).yc - 50)) && ((userXC > (squareList.get(i).xc - 50)) && (userXC < (squareList.get(i).xc + squareList.get(i).wd)))) { // if we are on the same Y and we are within an X range...
                 amOnObstacle = true;
             }
         }
         intruding = false;
-    }
-
-    // don't allow the user to cross the ground line
-    public void noContact() {
-        if ((userYC >= (groundYA - 50)) || (userYC >= (groundYB - 50))) {
-            userYC = (groundYA - 50);
-            currentlyJumping = false;
-        }
     }
 
     public void gravity() {
@@ -225,13 +217,19 @@ class Canvas extends JComponent {
 
     public void isGravityOn(Graphics2D brush) { // TODO brush is only for debugging, remove when done
         // if the user hit the ground, gravity is OFF
-        if ((userYC >= (groundYA - 50)) || (userYC >= (groundYB - 50))) {
+        if (userYC >= (groundYA - 50)) {
             gravityOn = false;
             //currentlyJumping = false;
-        } else if (((userYC < (groundYA - 50)) || (userYC < (groundYB - 50))) && !amOnObstacle) { // if the user is not yet at the ground...
+        }
+        if ((userYC < (groundYA - 50)) && !amOnObstacle) { // if the user is not yet at the ground...
             gravityOn = true;
         }
     }
+
+
+
+
+
 
     public void jump() {
         if (currentlyJumping == false) {
@@ -249,6 +247,13 @@ class Canvas extends JComponent {
                 //currentlyJumping = false; we don't do this because it allows us to jump infinitely after hitting the bottom of an obstacle
             }
             intruding = false;
+        }
+    }
+    // don't allow the user to cross the ground line
+    public void noContact() {
+        if ((userYC > (groundYA - 50)) || (userYC > (groundYB - 50))) {
+            userYC = (groundYA - 50);
+            currentlyJumping = false;
         }
     }
 }
