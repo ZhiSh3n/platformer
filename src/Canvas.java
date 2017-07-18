@@ -1,3 +1,5 @@
+import sun.awt.image.PixelConverter;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -5,14 +7,13 @@ import java.awt.event.KeyEvent;
 import javax.swing.JComponent;
 import java.awt.RenderingHints;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
-// TODO ok here we want to implement side scrolling capabiilties
-// TODO keep the user within a smaller box compared to the whole jpanel frame
-// TODO whenever we move past this box, shift the small box and the environment by the amount move-passed
-// TODO and keep the user where he is
-// TODO then draw!
-
-// TODO randomly generate obstacles?
+// TODO LIST
+/*
+so right now there is was a bug observed once where you would clip to somewhere else, see if you can replicate this
+not sure what caused it
+ */
 
 /**
  * Created by zhi on 7/16/17.
@@ -45,34 +46,53 @@ class Canvas extends JComponent {
 
     // jumping
     public static boolean currentlyJumping = false;
+    public static int jumpRate = 5;
 
+    // intruder information
     public static boolean intruding = false;
     public static Square intruder;
 
-    public static int jumpRate = 5;
-
+    // is the user standing on an obstacle?
     public static boolean amOnObstacle = false;
 
+    // scrolling information
     public static boolean horizontalScrollTrue = false;
     public static boolean verticalScrollTrue = false;
 
-
     // debugging tools
     public static int frameCounter = 0;
-    public static int[] YCBuffer = new int[2];
+    public static int[] XBuffer = new int[3];
 
     // arraylist of squares
     ArrayList<Square> squareList = new ArrayList<Square>();
 
     public Canvas() {
         // TODO generate obstacles here
+
+        for (int i = 0; i < 100; i++) { // make 100 random obstacles
+            int randomX = ThreadLocalRandom.current().nextInt(-800, 1600);
+            int randomY = ThreadLocalRandom.current().nextInt(-1000, 400);
+            int randomW = ThreadLocalRandom.current().nextInt(25, 100 + 1);
+            int randomH = ThreadLocalRandom.current().nextInt(25, 100 + 1);
+            squareList.add(new Square(randomX, randomY, randomW, randomH));
+        }
+
+        // user spawns at 350, 180
+        // just to make sure nothing is in the spawning vicinity
+        for (int i = 0; i < squareList.size(); i++) {
+            if ((squareList.get(i).xc < 500) && (squareList.get(i).xc > 300) && (squareList.get(i).yc > 100) && (squareList.get(i).yc < 250)) {
+                squareList.remove(i);
+            }
+        }
+
+        /* if you want to define squares yourself
         squareList.add(new Square(400, 270, 50, 50));
         squareList.add(new Square(350, 230, 50, 50));
         squareList.add(new Square(150, 230, 100, 50));
         squareList.add(new Square(510, 230, 50, 100));
         squareList.add(new Square(300, 150, 50, 100));
         squareList.add(new Square(510, 70, 50, 50));
-
+        */
 
         // start animation thread
         Thread animationThread = new Thread(new Runnable() {
@@ -93,11 +113,8 @@ class Canvas extends JComponent {
     public void paintComponent(Graphics g) {
         Graphics2D brush = (Graphics2D) g;
 
-        frameCounter += 1;
-        YCBuffer[0] = YCBuffer[1];
-        YCBuffer[1] = userYC;
-        System.out.println(YCBuffer[1] - YCBuffer[0]);
-        //System.out.println(userYC);
+        // TODO multi-purpose counter
+        //frameCounter += 1;
 
         // rendering hints
         RenderingHints rh = new RenderingHints(
@@ -120,6 +137,8 @@ class Canvas extends JComponent {
         brush.drawString("On Obstacle? " + amOnObstacle, 10, 110);
         brush.drawString("Gravity? " + gravityOn, 10, 125);
         brush.drawString("Frames: " + frameCounter, 10, 140);
+        brush.drawString("JumpRate: " + jumpRate, 10, 155);
+        //brush.drawString("" + ThreadLocalRandom.current().nextInt(0, 9 + 1), 10, 155);
 
         // set brush color
         brush.setColor(Color.BLACK);
@@ -153,13 +172,15 @@ class Canvas extends JComponent {
             if ((squareList.get(i).xc < Run.frameWidth * 0.98) && (squareList.get(i).xc > (Run.frameWidth * 0.02)) && (squareList.get(i).yc < (Run.frameHeight * 0.95)) && (squareList.get(i).yc > (Run.frameHeight * 0.05))) {
                 squareList.get(i).draw(brush);
             }
-
         }
+
+
 
         // movement
         for (int i = 0; i < Mover.keyList.size(); i++) {
             switch (Mover.keyList.get(i)) {
                 case KeyEvent.VK_W:
+                    /* TODO disabled W functionality
                     userYC -= 2;
                     checkIntruding();
                     if (intruding) {
@@ -174,12 +195,14 @@ class Canvas extends JComponent {
                         groundYB += 2;
                     }
                     verticalScrollTrue = false;
+                    */
                     break;
                 case KeyEvent.VK_A:
                     userXC -= 2;
                     checkIntruding();
                     if (intruding) {
                         userXC += 2;
+                        userXC = intruder.xc + intruder.wd;
                     }
                     intruding = false;
                     checkScrollHorizontal();
@@ -189,7 +212,7 @@ class Canvas extends JComponent {
                     }
                     horizontalScrollTrue = false;
                     break;
-                case KeyEvent.VK_S:
+                case KeyEvent.VK_S: // TODO consider disabling S functionality
                     userYC += 2;
                     checkIntruding();
                     if (intruding) {
@@ -210,6 +233,7 @@ class Canvas extends JComponent {
                     checkIntruding();
                     if (intruding) {
                         userXC -= 2;
+                        userXC = intruder.xc - 50;
                     }
                     intruding = false;
                     checkScrollHorizontal();
@@ -226,6 +250,9 @@ class Canvas extends JComponent {
         }
         // if jumping intrudes an obstacle, turn jumpRate to 0
         // jumprate will be turned back on once it hits the ground
+        XBuffer[0] = XBuffer[1];
+        XBuffer[1] = XBuffer[2];
+        XBuffer[2] = userXC;
         jumping();
     }
 
@@ -293,6 +320,7 @@ class Canvas extends JComponent {
         for (int i = 0; i < squareList.size(); i++) {
             if ((userYC == (squareList.get(i).yc - 50)) && ((userXC > (squareList.get(i).xc - 50)) && (userXC < (squareList.get(i).xc + squareList.get(i).wd)))) { // if we are on the same Y and we are within an X range...
                 amOnObstacle = true;
+                //jumpRate = 5;
             }
         }
         intruding = false;
@@ -329,9 +357,14 @@ class Canvas extends JComponent {
             userYC -= jumpRate;
             checkIntruding();
             if (intruding) {
-                userYC += jumpRate;
-                jumpRate = 0;
                 //currentlyJumping = false; we don't do this because it allows us to jump infinitely after hitting the bottom of an obstacle
+                frameCounter += 1;
+                userYC += jumpRate;
+                userYC = intruder.yc + intruder.hd;
+                jumpRate = 1;
+                // TODO does this need to be tweaked?
+                // TODO so right now if you slide OFF of the side of an obstacle after jumping the jumprate turns to 1,
+                // TODO which looks weird. need to add a conditional that it is not sliding off the side
             }
             intruding = false;
 
