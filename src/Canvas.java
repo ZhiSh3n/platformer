@@ -6,7 +6,7 @@ import javax.swing.JComponent;
 import java.awt.RenderingHints;
 import java.util.*;
 
-// TODO now all is left is removing unused brushes and do XC +- width instead of +- 5
+// TODO now replace 50 with user width to make it fully scalable
 
 /**
  * Created by zhi on 7/16/17.
