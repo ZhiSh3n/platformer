@@ -55,6 +55,8 @@ class Canvas extends JComponent {
         // TODO generate obstacles here
         squareList.add(new Square(400, 370, 50, 50));
         squareList.add(new Square(350, 330, 50, 50));
+        squareList.add(new Square(150, 330, 100, 50));
+        squareList.add(new Square(510, 330, 50, 100));
 
         // start animation thread
         Thread animationThread = new Thread(new Runnable() {
@@ -175,7 +177,7 @@ class Canvas extends JComponent {
     public void checkIntruding() {
         // if the user is on top of any object, gravity is also off
         for (int i = 0; i < squareList.size(); i++) {
-            if ((userYC > (squareList.get(i).yc - 50) && userYC < (squareList.get(i).yc + 50) && userXC > (squareList.get(i).xc - 50) && userXC < (squareList.get(i).xc + 50))) {
+            if ((userYC > (squareList.get(i).yc - 50) && userYC < (squareList.get(i).yc + squareList.get(i).hd) && userXC > (squareList.get(i).xc - 50) && userXC < (squareList.get(i).xc + squareList.get(i).wd))) {
                 intruding = true;
                 intruder = squareList.get(i);
             }
@@ -194,7 +196,7 @@ class Canvas extends JComponent {
         }
         amOnObstacle = false;
         for (int i = 0; i < squareList.size(); i++) {
-            if ((userYC == (squareList.get(i).yc - 50) && (userXC < (squareList.get(i).xc - 50)) && (userXC > (squareList.get(i).xc + 50)))) { // if we are on the same Y and we are within an X range...
+            if ((userYC == (squareList.get(i).yc - 50) && (userXC < (squareList.get(i).xc - squareList.get(i).wd)) && (userXC > (squareList.get(i).xc + 50)))) { // if we are on the same Y and we are within an X range...
                 amOnObstacle = true;
             }
         }
