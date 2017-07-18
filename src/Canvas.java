@@ -6,6 +6,8 @@ import javax.swing.JComponent;
 import java.awt.RenderingHints;
 import java.util.*;
 
+// TODO now all is left is removing unused brushes and do XC +- width instead of +- 5
+
 /**
  * Created by zhi on 7/16/17.
  */
@@ -192,7 +194,7 @@ class Canvas extends JComponent {
         }
         amOnObstacle = false;
         for (int i = 0; i < squareList.size(); i++) {
-            if (userYC == (squareList.get(i).yc - 50)) {
+            if ((userYC == (squareList.get(i).yc - 50) && (userXC < (squareList.get(i).xc - 50)) && (userXC > (squareList.get(i).xc + 50)))) { // if we are on the same Y and we are within an X range...
                 amOnObstacle = true;
             }
         }
