@@ -7,12 +7,15 @@ import java.awt.Dimension;
 
 public class Run extends JPanel {
 
+    public static int frameWidth = 800;
+    public static int frameHeight = 600;
+
     public static void main(String[] args) {
         // make a new JFrame
         JFrame frame = new JFrame("platformer");
 
         // TODO the frame is not actually 800x600, consider using JPanel...
-        frame.setSize(800, 600);
+        frame.setSize(frameWidth, frameHeight);
 
         // define some variables for JFrame
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

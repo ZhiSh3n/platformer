@@ -6,7 +6,13 @@ import javax.swing.JComponent;
 import java.awt.RenderingHints;
 import java.util.*;
 
-// TODO now replace 50 with user width to make it fully scalable
+// TODO ok here we want to implement side scrolling capabiilties
+// TODO keep the user within a smaller box compared to the whole jpanel frame
+// TODO whenever we move past this box, shift the small box and the environment by the amount move-passed
+// TODO and keep the user where he is
+// TODO then draw!
+
+// TODO we need to only draw things if they are on the screen
 
 /**
  * Created by zhi on 7/16/17.
@@ -22,8 +28,8 @@ class Canvas extends JComponent {
     // initialize ground information
     public static int groundXA = 0;
     public static int groundXB = 800;
-    public static int groundYA = 500;
-    public static int groundYB = 500;
+    public static int groundYA = 400;
+    public static int groundYB = 400;
 
     // initialize gravity information
     public static double accelerationDueToGravity = 0.1;
@@ -47,16 +53,17 @@ class Canvas extends JComponent {
 
     public static boolean amOnObstacle = false;
 
+    public static boolean scrollTrue = false;
 
     // arraylist of squares
     ArrayList<Square> squareList = new ArrayList<Square>();
 
     public Canvas() {
         // TODO generate obstacles here
-        squareList.add(new Square(400, 370, 50, 50));
-        squareList.add(new Square(350, 330, 50, 50));
-        squareList.add(new Square(150, 330, 100, 50));
-        squareList.add(new Square(510, 330, 50, 100));
+        squareList.add(new Square(400, 270, 50, 50));
+        squareList.add(new Square(350, 230, 50, 50));
+        squareList.add(new Square(150, 230, 100, 50));
+        squareList.add(new Square(510, 230, 50, 100));
 
         // start animation thread
         Thread animationThread = new Thread(new Runnable() {
@@ -131,7 +138,7 @@ class Canvas extends JComponent {
         }
 
         // movement
-        for (int i = 0 ; i < Mover.keyList.size(); i++) {
+        for (int i = 0; i < Mover.keyList.size(); i++) {
             switch (Mover.keyList.get(i)) {
                 case KeyEvent.VK_W:
                     userYC -= 2;
@@ -148,6 +155,12 @@ class Canvas extends JComponent {
                         userXC += 2;
                     }
                     intruding = false;
+                    checkScroll(brush);
+                    if (scrollTrue) {
+                        userXC += 2;
+                        shiftAll(-2);
+                    }
+                    scrollTrue = false;
                     break;
                 case KeyEvent.VK_S:
                     userYC += 2;
@@ -164,6 +177,12 @@ class Canvas extends JComponent {
                         userXC -= 2;
                     }
                     intruding = false;
+                    checkScroll(brush);
+                    if (scrollTrue) {
+                        userXC -= 2;
+                        shiftAll(+2);
+                    }
+                    scrollTrue = false;
                     break;
                 case KeyEvent.VK_SPACE:
                     jump();
@@ -174,6 +193,24 @@ class Canvas extends JComponent {
         // jumprate will be turned back on once it hits the ground
         jumping();
     }
+
+    public void checkScroll(Graphics2D brush) {
+        // the in-frame box
+        if (userXC > (Run.frameWidth * 0.8)) {
+            scrollTrue = true;
+        }
+        if (userXC < (Run.frameWidth * 0.2)) {
+            scrollTrue = true;
+        }
+    }
+
+    public void shiftAll(int shiftBy) {
+        for (int i = 0; i < squareList.size(); i++) {
+            squareList.get(i).xc -= shiftBy;
+        }
+    }
+
+
     public void checkIntruding() {
         // if the user is on top of any object, gravity is also off
         for (int i = 0; i < squareList.size(); i++) {
@@ -183,7 +220,7 @@ class Canvas extends JComponent {
             }
         }
     }
-    public void actVelocity() { // TODO
+    public void actVelocity() { //
         userYC += (int) YVelocity; // add the gravity velocity
         checkIntruding(); // are we intruding?
         if (intruding == true) { // if we are...
