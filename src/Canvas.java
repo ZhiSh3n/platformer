@@ -12,8 +12,7 @@ import java.util.*;
 // TODO and keep the user where he is
 // TODO then draw!
 
-// TODO we need to only draw things if they are on the screen (vertical)
-
+// TODO randomly generate obstacles?
 
 /**
  * Created by zhi on 7/16/17.
