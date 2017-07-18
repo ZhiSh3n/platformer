@@ -12,9 +12,8 @@ import java.util.*;
 // TODO and keep the user where he is
 // TODO then draw!
 
-// TODO we need to only draw things if they are on the screen
+// TODO we need to only draw things if they are on the screen (vertical)
 
-// TODO if we are not implementing top scrolling, then perhaps make a ceiling?
 
 /**
  * Created by zhi on 7/16/17.
@@ -148,10 +147,11 @@ class Canvas extends JComponent {
         brush.drawRect(userXC, userYC, userWidth, userHeight);
 
 
+
         // the draw function for all the obstacles
         // TODO make it so that obstacles are only drawn when they are in the frame
         for (int i = 0; i < squareList.size(); i++) {
-            if ((squareList.get(i).xc < Run.frameWidth * 0.98) && (squareList.get(i).xc > (Run.frameWidth * 0.02))) {
+            if ((squareList.get(i).xc < Run.frameWidth * 0.98) && (squareList.get(i).xc > (Run.frameWidth * 0.02)) && (squareList.get(i).yc < (Run.frameHeight * 0.95)) && (squareList.get(i).yc > (Run.frameHeight * 0.05))) {
                 squareList.get(i).draw(brush);
             }
 
@@ -241,10 +241,10 @@ class Canvas extends JComponent {
     }
 
     public void checkScrollVertical() {
-        if (userYC > (Run.frameHeight * 0.8)) {
+        if (userYC > (Run.frameHeight * 0.7)) {
             verticalScrollTrue = true;
         }
-        if (userYC < (Run.frameHeight * 0.2)) {
+        if (userYC < (Run.frameHeight * 0.3)) {
             verticalScrollTrue = true;
         }
     }
@@ -339,9 +339,9 @@ class Canvas extends JComponent {
             checkScrollVertical();
             if (verticalScrollTrue) {
                 userYC += jumpRate;
-                shiftVertical(-jumpRate);
-                groundYA += jumpRate;
-                groundYB += jumpRate;
+                shiftVertical(-(jumpRate));
+                groundYA += (jumpRate);
+                groundYB += (jumpRate);
             }
             verticalScrollTrue = false;
         }
