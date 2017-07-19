@@ -44,7 +44,7 @@ you can move left or right while jumping.
     * Whenever gravity is applicable (not on the ground or atop an obstacle), add a certain velocity to the user's y-coordinate.
     * I created the jumping mechanic by applying a constant upward velocity to the user whenever spacebar was pressed. This is probably not the best method, as it created a problems that I will outline in the bugs section below.
 
-# Bugs
+## Bugs
 
 * Clipping when falling at fast speeds onto close obstacles
     * The method to detect user-intrusion iterates through all the obstacles and finds one "intruder". The problem is that when two obstacles are interscting, one coordinate change may actually cause the user to intrude into more than one obstacle.
