@@ -9,11 +9,7 @@ import java.awt.RenderingHints;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-// TODO LIST
-/*
-so right now there is was a bug observed once where you would clip to somewhere else, see if you can replicate this
-not sure what caused it
- */
+// TODO sections down the document list potential or current bugs
 
 /**
  * Created by zhi on 7/16/17.
@@ -37,7 +33,7 @@ class Canvas extends JComponent {
     public static boolean gravityOn = true;
 
     // initialize delta timing information
-    public static double beatPeriod = 29;
+    public static double beatPeriod = 9;
     public static double lastTime = 0;
 
     // velocity arrays
@@ -69,15 +65,15 @@ class Canvas extends JComponent {
 
     public Canvas() {
         // TODO generate obstacles here
-        /*
-        for (int i = 0; i < 100; i++) { // make 100 random obstacles
-            int randomX = ThreadLocalRandom.current().nextInt(-800, 1600);
+
+        for (int i = 0; i < 200; i++) { // make 100 random obstacles
+            int randomX = ThreadLocalRandom.current().nextInt(-1000, 1800);
             int randomY = ThreadLocalRandom.current().nextInt(-1000, 400);
             int randomW = ThreadLocalRandom.current().nextInt(25, 100 + 1);
             int randomH = ThreadLocalRandom.current().nextInt(25, 100 + 1);
             squareList.add(new Square(randomX, randomY, randomW, randomH));
         }
-        */
+
 
         // user spawns at 350, 180
         // just to make sure nothing is in the spawning vicinity
@@ -88,8 +84,8 @@ class Canvas extends JComponent {
         }
 
 
-        squareList.add(new Square(400, 230, 50, 50));
-        squareList.add(new Square(350, 190, 50, 50));
+        //squareList.add(new Square(400, 230, 50, 50));
+        //squareList.add(new Square(350, 190, 50, 50));
         /* if you want to define squares yourself
         squareList.add(new Square(150, 230, 100, 50));
         squareList.add(new Square(510, 230, 50, 100));
@@ -168,17 +164,12 @@ class Canvas extends JComponent {
         // draw the user
         brush.drawRect(userXC, userYC, userWidth, userHeight);
 
-
-
         // the draw function for all the obstacles
-        // TODO make it so that obstacles are only drawn when they are in the frame
         for (int i = 0; i < squareList.size(); i++) {
             if ((squareList.get(i).xc < Run.frameWidth * 0.98) && (squareList.get(i).xc > (Run.frameWidth * 0.02)) && (squareList.get(i).yc < (Run.frameHeight * 0.95)) && (squareList.get(i).yc > (Run.frameHeight * 0.05))) {
                 squareList.get(i).draw(brush);
             }
         }
-
-
 
         // movement
         for (int i = 0; i < Mover.keyList.size(); i++) {
@@ -217,7 +208,8 @@ class Canvas extends JComponent {
                     }
                     horizontalScrollTrue = false;
                     break;
-                case KeyEvent.VK_S: // TODO consider disabling S functionality
+                case KeyEvent.VK_S: // TODO disabled S functionality
+                    /*
                     userYC += 2;
                     checkIntruding();
                     if (intruding) {
@@ -232,6 +224,7 @@ class Canvas extends JComponent {
                         groundYB -= 2;
                     }
                     verticalScrollTrue = false;
+                    */
                     break;
                 case KeyEvent.VK_D:
                     userXC += 2;
@@ -306,6 +299,10 @@ class Canvas extends JComponent {
     public void actVelocity() { //
         userYC += YVelocity; // add the gravity velocity
         checkIntruding(); // are we intruding?
+        /*
+        TODO identified a problem where when two obstacles are overlapping, acting on velocity might make the intruder
+        TODO the wrong obstacle, which causes the user to clip to another place
+         */
         if (intruding == true) { // if we are...
             userYC -= YVelocity; // rescind the change in y coordinate
             userYC = intruder.yc - 50; // put the user on top of the obstacle
@@ -359,8 +356,18 @@ class Canvas extends JComponent {
     }
 
     /*
-    if you are holding down A or D and hit the top of a thing, and sliding against an obstacle,
-    jumprate does not decrease to 1
+    TODO we've solved the problem of the changing jump velocity when sliding off the side of an object, but...
+    TODO if you are sliding against (pressing A or D) the side of an obstacle, and are jumping, and you hit
+    TODO the bottom of an obstacle, jumprate does not decrease to 1
+    TODO this only applies when you are both jumping and actively pressing A and D
+
+    if we remove the horizontalBoolean capability, we don't get this problem, but then we get the sliding problem
+    again.
+
+    how do I tell the difference between HITTING the bottom of an obstacles and simply SLIDING along its side and
+    fall below it?
+
+    then again, this doesn't affect gameplay that much, it just bugs me.
      */
 
     public void jumping() {
@@ -371,16 +378,14 @@ class Canvas extends JComponent {
                 intruding = false;
                 frameCounter -= 1;
                 userYC += jumpRate;
-                userYC = intruder.yc + intruder.hd;
+                userYC = intruder.yc + intruder.hd; // TODO potential problem here where user screen moves
+                // TODO higher than user...
                 if (horizontalBoolean == false) {
-                    jumpRate = 1;
+                    jumpRate = 0;
+                    YVelocity = 0;
                 }
                 horizontalBoolean = false;
-                // TODO we've had problems with jump rates changing after sliding off the side of objects...
-                // TODO keep an eye out for bugs
             }
-
-
             checkScrollVertical();
             if (verticalScrollTrue) {
                 userYC += jumpRate;
