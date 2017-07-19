@@ -22,7 +22,7 @@ class Canvas extends JComponent {
 
     // initialize user information
     public static int userXC = 350;
-    public static int userYC = 180;
+    public static int userYC = 350;
     public static int userWidth = 50;
     public static int userHeight = 50;
 
@@ -37,7 +37,7 @@ class Canvas extends JComponent {
     public static boolean gravityOn = true;
 
     // initialize delta timing information
-    public static double beatPeriod = 9;
+    public static double beatPeriod = 29;
     public static double lastTime = 0;
 
     // velocity arrays
@@ -62,13 +62,14 @@ class Canvas extends JComponent {
     // debugging tools
     public static int frameCounter = 0;
     public static int[] XBuffer = new int[3];
+    public static boolean horizontalBoolean = false;
 
     // arraylist of squares
     ArrayList<Square> squareList = new ArrayList<Square>();
 
     public Canvas() {
         // TODO generate obstacles here
-
+        /*
         for (int i = 0; i < 100; i++) { // make 100 random obstacles
             int randomX = ThreadLocalRandom.current().nextInt(-800, 1600);
             int randomY = ThreadLocalRandom.current().nextInt(-1000, 400);
@@ -76,6 +77,7 @@ class Canvas extends JComponent {
             int randomH = ThreadLocalRandom.current().nextInt(25, 100 + 1);
             squareList.add(new Square(randomX, randomY, randomW, randomH));
         }
+        */
 
         // user spawns at 350, 180
         // just to make sure nothing is in the spawning vicinity
@@ -85,9 +87,10 @@ class Canvas extends JComponent {
             }
         }
 
+
+        squareList.add(new Square(400, 230, 50, 50));
+        squareList.add(new Square(350, 190, 50, 50));
         /* if you want to define squares yourself
-        squareList.add(new Square(400, 270, 50, 50));
-        squareList.add(new Square(350, 230, 50, 50));
         squareList.add(new Square(150, 230, 100, 50));
         squareList.add(new Square(510, 230, 50, 100));
         squareList.add(new Square(300, 150, 50, 100));
@@ -138,6 +141,7 @@ class Canvas extends JComponent {
         brush.drawString("Gravity? " + gravityOn, 10, 125);
         brush.drawString("Frames: " + frameCounter, 10, 140);
         brush.drawString("JumpRate: " + jumpRate, 10, 155);
+        brush.drawString("" + horizontalBoolean, 10, 170);
         //brush.drawString("" + ThreadLocalRandom.current().nextInt(0, 9 + 1), 10, 155);
 
         // set brush color
@@ -203,6 +207,7 @@ class Canvas extends JComponent {
                     if (intruding) {
                         userXC += 2;
                         userXC = intruder.xc + intruder.wd;
+                        horizontalBoolean = true;
                     }
                     intruding = false;
                     checkScrollHorizontal();
@@ -234,6 +239,7 @@ class Canvas extends JComponent {
                     if (intruding) {
                         userXC -= 2;
                         userXC = intruder.xc - 50;
+                        horizontalBoolean = true;
                     }
                     intruding = false;
                     checkScrollHorizontal();
@@ -352,21 +358,28 @@ class Canvas extends JComponent {
         }
     }
 
+    /*
+    if you are holding down A or D and hit the top of a thing, and sliding against an obstacle,
+    jumprate does not decrease to 1
+     */
+
     public void jumping() {
         if (currentlyJumping == true) {
             userYC -= jumpRate;
             checkIntruding();
             if (intruding) {
-                //currentlyJumping = false; we don't do this because it allows us to jump infinitely after hitting the bottom of an obstacle
-                frameCounter += 1;
+                intruding = false;
+                frameCounter -= 1;
                 userYC += jumpRate;
                 userYC = intruder.yc + intruder.hd;
-                jumpRate = 1;
-                // TODO does this need to be tweaked?
-                // TODO so right now if you slide OFF of the side of an obstacle after jumping the jumprate turns to 1,
-                // TODO which looks weird. need to add a conditional that it is not sliding off the side
+                if (horizontalBoolean == false) {
+                    jumpRate = 1;
+                }
+                horizontalBoolean = false;
+                // TODO we've had problems with jump rates changing after sliding off the side of objects...
+                // TODO keep an eye out for bugs
             }
-            intruding = false;
+
 
             checkScrollVertical();
             if (verticalScrollTrue) {
