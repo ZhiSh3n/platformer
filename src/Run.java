@@ -1,5 +1,4 @@
 import javax.swing.*;
-import java.awt.Dimension;
 
 /**
  * Created by zhi on 7/16/17.
@@ -7,14 +6,13 @@ import java.awt.Dimension;
 
 public class Run extends JPanel {
 
+    // create static variables for frame dimensions because they need to be used in Canvas
     public static int frameWidth = 800;
     public static int frameHeight = 600;
 
     public static void main(String[] args) {
         // make a new JFrame
         JFrame frame = new JFrame("platformer");
-
-        // TODO the frame is not actually 800x600, consider using JPanel...
         frame.setSize(frameWidth, frameHeight);
 
         // define some variables for JFrame

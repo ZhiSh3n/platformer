@@ -1,5 +1,3 @@
-import sun.awt.image.PixelConverter;
-
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -9,7 +7,7 @@ import java.awt.RenderingHints;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-// TODO sections down the document list potential or current bugs
+// TODO look for TODO sections for potential bugs and important notes!
 
 /**
  * Created by zhi on 7/16/17.
@@ -36,15 +34,16 @@ class Canvas extends JComponent {
     public static double beatPeriod = 9;
     public static double lastTime = 0;
 
-    // velocity arrays
+    // velocity arrays; X is not actually used
     public static double YVelocity = 0;
     public static double XVelocity = 0;
 
-    // jumping
+    // jumping information
     public static boolean currentlyJumping = false;
     public static int jumpRate = 5;
 
     // intruder information
+    // used in collision prevention
     public static boolean intruding = false;
     public static Square intruder;
 
@@ -60,12 +59,12 @@ class Canvas extends JComponent {
     public static int[] XBuffer = new int[3];
     public static boolean horizontalBoolean = false;
 
-    // arraylist of squares
+    // arraylist of randomly generated squares
     ArrayList<Square> squareList = new ArrayList<Square>();
 
+    // call this from Run.java to create a new canvas and initiate the animation thread
     public Canvas() {
-        // TODO generate obstacles here
-
+        // randomly generate obstacles
         for (int i = 0; i < 200; i++) { // make 100 random obstacles
             int randomX = ThreadLocalRandom.current().nextInt(-1000, 1800);
             int randomY = ThreadLocalRandom.current().nextInt(-1000, 400);
@@ -74,23 +73,23 @@ class Canvas extends JComponent {
             squareList.add(new Square(randomX, randomY, randomW, randomH));
         }
 
-
-        // user spawns at 350, 180
-        // just to make sure nothing is in the spawning vicinity
+        // since the user spawns at 350,350, remove all the obstacles that may interfere with
+        // the spawning position
         for (int i = 0; i < squareList.size(); i++) {
             if ((squareList.get(i).xc < 500) && (squareList.get(i).xc > 300) && (squareList.get(i).yc > 100) && (squareList.get(i).yc < 250)) {
                 squareList.remove(i);
             }
         }
 
-
-        //squareList.add(new Square(400, 230, 50, 50));
-        //squareList.add(new Square(350, 190, 50, 50));
-        /* if you want to define squares yourself
+        // this currently commented out, but this would be how you
+        // generate squares manually
+        /*
         squareList.add(new Square(150, 230, 100, 50));
         squareList.add(new Square(510, 230, 50, 100));
         squareList.add(new Square(300, 150, 50, 100));
         squareList.add(new Square(510, 70, 50, 50));
+        squareList.add(new Square(400, 230, 50, 50));
+        squareList.add(new Square(350, 190, 50, 50));
         */
 
         // start animation thread
@@ -98,6 +97,7 @@ class Canvas extends JComponent {
             public void run() {
                 while (true) {
                     // delta timing is more accurate than Thread.sleep
+                    // i like setting the beatPeriod to 9, which equals roughly 100 frames per second
                     double now = System.currentTimeMillis();
                     if (now - lastTime > beatPeriod) {
                         lastTime = now;
@@ -112,9 +112,6 @@ class Canvas extends JComponent {
     public void paintComponent(Graphics g) {
         Graphics2D brush = (Graphics2D) g;
 
-        // TODO multi-purpose counter
-        //frameCounter += 1;
-
         // rendering hints
         RenderingHints rh = new RenderingHints(
                 RenderingHints.KEY_TEXT_ANTIALIASING,
@@ -122,12 +119,8 @@ class Canvas extends JComponent {
         );
         brush.setRenderingHints(rh);
 
-        // draw the text
+        // included some text for debugging
         brush.drawString("Y-Velocity: " + YVelocity, 10, 20);
-        // Y Velocity fluctuates when you are on an obstacle because gravity is set to off when you are intruding
-        // however you are then placed right on top of the obstacle which is NOT intruding. while you are not
-        // intruding, your y velocity will increase and make you intrude. this is why the y velocity will fluctuate
-        // however there is no real impact in-game
         brush.drawString("Squares: " + squareList.size(), 10, 35);
         brush.drawString("Jumping: " + currentlyJumping, 10, 50);
         brush.drawString("Y-Coordinate: " + userYC, 10, 65);
@@ -256,7 +249,8 @@ class Canvas extends JComponent {
     }
 
     public void checkScrollHorizontal() {
-        // the in-frame box
+        // the in-frame box for X
+        // if the user moves past this threshold, move the screen instead of the user
         if (userXC > (Run.frameWidth * 0.65)) {
             horizontalScrollTrue = true;
         }
@@ -266,6 +260,8 @@ class Canvas extends JComponent {
     }
 
     public void checkScrollVertical() {
+        // the in-frame box for Y
+        // if the user moves past this threshold, move the screen instead of the user
         if (userYC > (Run.frameHeight * 0.7)) {
             verticalScrollTrue = true;
         }
@@ -274,19 +270,21 @@ class Canvas extends JComponent {
         }
     }
 
+    // method to shift everything BUT the user by an amount
     public void shiftHorizontal(int shiftBy) {
         for (int i = 0; i < squareList.size(); i++) {
             squareList.get(i).xc -= shiftBy;
         }
     }
 
+    // method to shift everything BUT the user by an amount
     public void shiftVertical(double shiftBy) {
         for (int i = 0; i < squareList.size(); i++) {
             squareList.get(i).yc -= shiftBy;
         }
     }
 
-
+    // check if the user is colliding into any obstacles
     public void checkIntruding() {
         // if the user is on top of any object, gravity is also off
         for (int i = 0; i < squareList.size(); i++) {
@@ -296,6 +294,8 @@ class Canvas extends JComponent {
             }
         }
     }
+
+    // add the velocity created by gravity
     public void actVelocity() { //
         userYC += YVelocity; // add the gravity velocity
         checkIntruding(); // are we intruding?
@@ -303,13 +303,14 @@ class Canvas extends JComponent {
         TODO identified a problem where when two obstacles are overlapping, acting on velocity might make the intruder
         TODO the wrong obstacle, which causes the user to clip to another place
          */
-        if (intruding == true) { // if we are...
+        if (intruding == true) { // if we are intruding...
             userYC -= YVelocity; // rescind the change in y coordinate
             userYC = intruder.yc - 50; // put the user on top of the obstacle
             gravityOn = false; // gravity is OFF
             jumpRate = 5;
         }
 
+        // see if we need to scroll the screen vertically
         checkScrollVertical();
         if (verticalScrollTrue) {
             userYC -= YVelocity;
@@ -319,6 +320,7 @@ class Canvas extends JComponent {
         }
         verticalScrollTrue = false;
 
+        // are we on an obstacle?
         amOnObstacle = false;
         for (int i = 0; i < squareList.size(); i++) {
             if ((userYC == (squareList.get(i).yc - 50)) && ((userXC > (squareList.get(i).xc - 50)) && (userXC < (squareList.get(i).xc + squareList.get(i).wd)))) { // if we are on the same Y and we are within an X range...
@@ -328,6 +330,8 @@ class Canvas extends JComponent {
         }
         intruding = false;
     }
+
+    // physics of gravity
     public void gravity() {
         // if user hit the ground
         if (gravityOn == true) {
@@ -339,6 +343,8 @@ class Canvas extends JComponent {
             jumpRate = 5;
         }
     }
+
+    // is gravity on?
     public void isGravityOn(Graphics2D brush) { // TODO brush is only for debugging, remove when done
         // if the user hit the ground, gravity is OFF
         if (userYC >= (groundYA - 50)) {
@@ -349,6 +355,8 @@ class Canvas extends JComponent {
             gravityOn = true;
         }
     }
+
+    // jump initializer
     public void jump() {
         if (currentlyJumping == false) {
             currentlyJumping = true;
@@ -360,16 +368,14 @@ class Canvas extends JComponent {
     TODO if you are sliding against (pressing A or D) the side of an obstacle, and are jumping, and you hit
     TODO the bottom of an obstacle, jumprate does not decrease to 1
     TODO this only applies when you are both jumping and actively pressing A and D
-
     if we remove the horizontalBoolean capability, we don't get this problem, but then we get the sliding problem
     again.
-
     how do I tell the difference between HITTING the bottom of an obstacles and simply SLIDING along its side and
     fall below it?
-
     then again, this doesn't affect gameplay that much, it just bugs me.
      */
 
+    // actual jumping method
     public void jumping() {
         if (currentlyJumping == true) {
             userYC -= jumpRate;

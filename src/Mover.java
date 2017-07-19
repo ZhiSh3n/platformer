@@ -6,6 +6,8 @@ import java.util.*;
  */
 class Mover implements KeyListener {
 
+    // an ArrayList used to store keypresses
+    // you can use any type of storage; I prefer ArrayList
     public static ArrayList<Integer> keyList = new ArrayList<Integer>();
 
     @Override
